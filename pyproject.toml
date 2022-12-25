@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastaws"
+version = "0.0.1"
+dependencies = ["aiofiles", "httpx"]
+
+[project.optional-dependencies]
+dev = ["ipdb"]
+
+[tool.hatch.build]
+only-packages = true
