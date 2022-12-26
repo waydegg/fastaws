@@ -1,31 +1,30 @@
-from datetime import datetime
-from typing import Literal
+import json
+from datetime import date, datetime
+from typing import Dict
 
 from httpx import AsyncClient
 
 from .auth import get_hash, get_signature, get_signature_key
+from .enums import Service
 
 
 class AwsClient:
     def __init__(
         self,
         *,
-        aws_access_key: str,
-        aws_secret_key: str,
+        access_key: str,
+        secret_key: str,
         region: str,
-        service: Literal["s3", "ses"],
-        **kwargs: str,
+        service: Service,
+        host: str,
+        version: date | None = None,
     ):
-        self.aws_access_key = aws_access_key
-        self.aws_secret_key = aws_secret_key
+        self.access_key = access_key
+        self.secret_key = secret_key
         self.region = region
         self.service = service
-
-        match (service):
-            case "s3":
-                raise NotImplementedError()
-            case "ses":
-                self.host = f"email.{self.region}.amazonaws.com"
+        self.host = host
+        self.version = version
 
         self._httpx = None
 
@@ -39,7 +38,7 @@ class AwsClient:
         self._httpx = None
 
     async def _make_request(
-        self, *, method: str, endpoint: str, action: str, data: str | None = None
+        self, *, method: str, endpoint: str, action: str, data: Dict | None = None
     ):
         assert isinstance(self._httpx, AsyncClient)
 
@@ -47,14 +46,19 @@ class AwsClient:
         amz_date = utcnow.strftime("%Y%m%dT%H%M%SZ")
         datestamp = utcnow.strftime("%Y%m%d")
 
-        request_parameters = f"Action={action}&Version=2013-10-15"
-        canonical_querystring = request_parameters
+        canonical_querystring_parts = [f"Action={action}"]
+        if self.version:
+            version_querystring = f"Version={self.version.strftime('%Y-%m-%d')}"
+            canonical_querystring_parts.append(version_querystring)
+        canonical_querystring = "&".join(canonical_querystring_parts)
 
         canonical_headers = f"host:{self.host}\nx-amz-date:{amz_date}\n"
         signed_headers = "host;x-amz-date"
 
-        # TODO: handle data and files
-        payload_hash = get_hash("")
+        payload = None
+        if data is not None:
+            payload = json.dumps(data)
+        payload_hash = get_hash("" if payload is None else payload)
 
         canonical_request_parts = [
             method,
@@ -68,16 +72,18 @@ class AwsClient:
         hashed_canonical_request = get_hash(canonical_request)
 
         algorithm = "AWS4-HMAC-SHA256"
-        credential_scope = f"{datestamp}/{self.region}/s3/aws4_request"
+        credential_scope = (
+            f"{datestamp}/{self.region}/{self.service.value}/aws4_request"
+        )
 
         string_to_sign = (
             f"{algorithm}\n{amz_date}\n{credential_scope}\n{hashed_canonical_request}"
         )
         signature_key = get_signature_key(
-            key=self.aws_secret_key,
+            key=self.secret_key,
             datestamp=datestamp,
             region=self.region,
-            service="s3",
+            service=self.service,
         )
         signature = get_signature(
             signature_key=signature_key, string_to_sign=string_to_sign
@@ -85,7 +91,7 @@ class AwsClient:
 
         authorization_header_parts = [
             algorithm,
-            f"Credential={self.aws_access_key}/{credential_scope},",
+            f"Credential={self.access_key}/{credential_scope},",
             f"SignedHeaders={signed_headers},",
             f"Signature={signature}",
         ]
@@ -95,14 +101,16 @@ class AwsClient:
             "x-amz-date": amz_date,
             "Authorization": authorization_header,
             "x-amz-content-sha256": payload_hash,
+            "Accept": "application/json",
         }
 
         res = await self._httpx.request(
             method=method,
             url=f"https://{self.host}{endpoint}?{canonical_querystring}",
             headers=headers,
-            content=data or None,
+            content=payload,
         )
         res.raise_for_status()
+        decoded_content = res.content.decode()
 
-        return res
+        return decoded_content

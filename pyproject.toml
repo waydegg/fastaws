@@ -4,11 +4,35 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastaws"
-version = "0.0.1"
+version = "0.0.2"
+description = "A fast, simple, async Python library for some AWS services (S3, SES)"
+readme = "README.md"
+requires-python = ">=3.10.4"
+license = { text = 'MIT' }
+authors = [{ name = "Wayde Gilliam", email = "waydegilliam@gmail.com" }]
+keywords = ["python", "aws", "asyncio"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Internet",
+]
 dependencies = ["aiofiles", "httpx"]
 
 [project.optional-dependencies]
 dev = ["ipdb"]
+
+[project.urls]
+Homepage = "https://github.com/waydegg/fastaws"
+Source = "https://github.com/waydegg/fastaws"
 
 [tool.hatch.build]
 only-packages = true
