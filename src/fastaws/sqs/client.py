@@ -69,7 +69,7 @@ class SqsClient(AwsClient):
         queue_url = data["GetQueueUrlResponse"]["GetQueueUrlResult"]["QueueUrl"]
         return queue_url
 
-    async def get_queues(self, prefix: str | None = None):
+    async def list_queues(self, prefix: str | None = None):
         data = await self._make_request(
             method="GET",
             action="ListQueues",
@@ -152,8 +152,10 @@ class SqsClient(AwsClient):
         )
         if data is None:
             return []
-
         messages = data["ReceiveMessageResponse"]["ReceiveMessageResult"]["messages"]
+        if messages is None:
+            return []
+
         receive_messages_response = []
         for message in messages:
             receive_message_response = SqsReceiveMessageResponse(
