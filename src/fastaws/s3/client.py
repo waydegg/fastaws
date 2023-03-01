@@ -9,7 +9,7 @@ from fastaws.core import AwsClient
 from fastaws.enums import Service
 
 
-class S3(AwsClient):
+class S3Client(AwsClient):
     def __init__(
         self,
         *,

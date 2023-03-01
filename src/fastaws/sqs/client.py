@@ -1,10 +1,7 @@
 import json
-import re
-import urllib.parse as urllib
 from datetime import date
 from typing import Any, Dict, List
 
-from ipdb import set_trace
 from structlog import get_logger
 
 from fastaws.core import AwsClient

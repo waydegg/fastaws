@@ -1,5 +1,5 @@
-from .s3.client import S3
-from .ses.client import SES
+from .s3.client import S3Client
+from .ses.client import SesClient
 from .sqs.client import SqsClient
 
-__all__ = ["S3", "SES", "SqsClient"]
+__all__ = ["S3Client", "SesClient", "SqsClient"]

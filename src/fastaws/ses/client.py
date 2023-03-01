@@ -6,7 +6,7 @@ from fastaws.core import AwsClient
 from fastaws.enums import Service
 
 
-class SES(AwsClient):
+class SesClient(AwsClient):
     def __init__(
         self,
         *,
@@ -32,7 +32,7 @@ class SES(AwsClient):
         res = await self._make_request(
             method="GET", endpoint="/", action="ListIdentities"
         )
-        res_dict = json.loads(res)
+        res_dict = json.loads(res.content.decode())
         res_result = res_dict["ListIdentitiesResponse"]["ListIdentitiesResult"]
         identities = res_result["Identities"]
 
@@ -49,7 +49,7 @@ class SES(AwsClient):
         res = await self._make_request(
             method="GET", endpoint="/v2/email/account", action="GetAccount"
         )
-        res_dict = json.loads(res)
+        res_dict = json.loads(res.content.decode())
 
         return res_dict
 
@@ -80,7 +80,7 @@ class SES(AwsClient):
             action="SendEmail",
             data=data,
         )
-        res_dict = json.loads(res)
+        res_dict = json.loads(res.content.decode())
         message_id = res_dict["MessageId"]
 
         return message_id

@@ -4,12 +4,10 @@ from datetime import date, datetime
 from typing import Dict
 
 from httpx import AsyncClient, Response
-from ipdb import set_trace
 from structlog import get_logger
 
 from .auth import get_hash, get_signature, get_signature_key
 from .enums import Service
-from .exceptions import HttpError
 
 logger = get_logger()
 
