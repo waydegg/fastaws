@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastaws"
-version = "0.0.4"
+version = "0.0.5"
 description = "A fast, simple, async Python library for some AWS services (S3, SES, SQS)"
 readme = "README.md"
 requires-python = ">=3.10.4"
@@ -30,6 +30,3 @@ dependencies = ["aiofiles==22.1.0", "httpx==0.23.1", "structlog==22.3.0"]
 [project.urls]
 Homepage = "https://github.com/waydegg/fastaws"
 Source = "https://github.com/waydegg/fastaws"
-
-[tool.hatch.build]
-only-packages = true
