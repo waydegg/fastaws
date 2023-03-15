@@ -4,6 +4,7 @@ from datetime import date, datetime
 from typing import Dict
 
 from httpx import AsyncClient, Response
+from ipdb import set_trace
 from structlog import get_logger
 
 from .auth import get_hash, get_signature, get_signature_key
@@ -46,11 +47,15 @@ class AwsClient:
         *,
         method: str,
         action: str,
+        host: str | None = None,
         endpoint: str = "/",
         params: Dict | None = None,
+        extra_headers: Dict | None = None,
         data: Dict | None = None,
     ) -> Response:
         assert isinstance(self._httpx, AsyncClient)
+
+        host = host or self.host
 
         utcnow = datetime.utcnow()
         amz_date = utcnow.strftime("%Y%m%dT%H%M%SZ")
@@ -72,12 +77,15 @@ class AwsClient:
                 canonical_querystring_parts.append(item_querystring)
         canonical_querystring = "&".join(sorted(canonical_querystring_parts))
 
-        canonical_headers = f"host:{self.host}\nx-amz-date:{amz_date}\n"
+        canonical_headers = f"host:{host}\nx-amz-date:{amz_date}\n"
         signed_headers = "host;x-amz-date"
 
         payload = None
         if data is not None:
-            payload = json.dumps(data)
+            if isinstance(data, dict):
+                payload = json.dumps(data)
+            elif isinstance(data, bytes):
+                payload = data
         payload_hash = get_hash("" if payload is None else payload)
 
         canonical_request_parts = [
@@ -121,12 +129,13 @@ class AwsClient:
             "x-amz-date": amz_date,
             "Authorization": authorization_header,
             "x-amz-content-sha256": payload_hash,
-            "Accept": "application/json",
         }
+        if extra_headers:
+            headers.update(extra_headers)
 
         res = await self._httpx.request(
             method=method,
-            url=f"https://{self.host}{endpoint}?{canonical_querystring}",
+            url=f"https://{host}{endpoint}?{canonical_querystring}",
             headers=headers,
             content=payload,
         )

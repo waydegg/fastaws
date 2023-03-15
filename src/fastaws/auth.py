@@ -24,8 +24,11 @@ def get_signature(*, signature_key: bytes, string_to_sign: str):
     ).hexdigest()
 
 
-def get_hash(value: str):
-    return hashlib.sha256((value).encode("utf-8")).hexdigest()
+def get_hash(value: str | bytes):
+    encoded_value = value.encode("utf-8") if isinstance(value, str) else value
+    hashed_value = hashlib.sha256(encoded_value).hexdigest()
+
+    return hashed_value
 
 
 async def get_file_hash(filepath: str):

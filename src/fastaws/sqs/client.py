@@ -41,7 +41,11 @@ class SqsClient(AwsClient):
         data: Dict | None = None,
     ) -> Dict[str, Any] | None:
         res = await super()._make_request(
-            method=method, action=action, endpoint=endpoint, params=params
+            method=method,
+            action=action,
+            endpoint=endpoint,
+            params=params,
+            extra_headers={"Accept": "application/json"},
         )
         data = json.loads(res.content.decode())
 
