@@ -7,6 +7,8 @@ from ipdb import set_trace
 from fastaws.core import AwsClient
 from fastaws.enums import Service
 
+from .models import S3ListObjectsRes, S3Object, S3ObjectOwner
+
 AmzAcl = (
     Literal["private"]
     | Literal["public-read"]
@@ -67,15 +69,56 @@ class S3Client(AwsClient):
 
         return buckets
 
-    async def list_objects(self, bucket: str):
+    async def list_objects(
+        self,
+        bucket: str,
+        *,
+        count: int | None = None,
+        prefix: str | None = None,
+        delimiter: str | None = None,
+    ):
         res = await self._make_request(
-            method="GET", action="ListObjects", host=f"{bucket}.{self.host}"
+            method="GET",
+            action="ListObjects",
+            host=f"{bucket}.{self.host}",
+            params={"max-keys": count, "prefix": prefix, "delimiter": delimiter},
         )
         res.raise_for_status()
 
-        data = res.content.decode()
+        set_trace()
 
-        return data
+        soup = BeautifulSoup(res.content.decode(), "xml")
+
+        s3_objects = []
+        content_els = soup.find_all("Contents")
+        for content_el in content_els:
+            s3_object_owner = S3ObjectOwner(
+                id=content_el.Owner.ID.text,
+                display_name=content_el.Owner.DisplayName.text,
+            )
+            s3_object = S3Object(
+                key=content_el.Key.text,
+                last_modified=datetime.strptime(
+                    content_el.LastModified.text, "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
+                etag=content_el.find("ETag").text.strip('"'),
+                size=int(content_el.Size.text),
+                storage_class=content_el.StorageClass.text.lower(),
+                owner=s3_object_owner,
+                type=content_el.Type.text.lower() if content_el.Type else None,
+            )
+            s3_objects.append(s3_object)
+
+        next_marker_el = soup.find("NextMarker")
+        next_marker = None
+        if isinstance(next_marker_el, Tag):
+            next_marker = next_marker_el.text
+
+        s3_list_objets_res = S3ListObjectsRes(
+            objects=s3_objects, next_marker=next_marker
+        )
+
+        return s3_list_objets_res
 
     async def put_object(
         self,
@@ -93,4 +136,5 @@ class S3Client(AwsClient):
             extra_headers={"x-amz-acl": access},
             data=data,
         )
+
         return res
