@@ -2,7 +2,6 @@ from datetime import date, datetime
 from typing import Any, Literal
 
 from bs4 import BeautifulSoup, Tag
-from ipdb import set_trace
 
 from fastaws.core import AwsClient
 from fastaws.enums import Service
@@ -84,8 +83,6 @@ class S3Client(AwsClient):
             params={"max-keys": count, "prefix": prefix, "delimiter": delimiter},
         )
         res.raise_for_status()
-
-        set_trace()
 
         soup = BeautifulSoup(res.content.decode(), "xml")
 
