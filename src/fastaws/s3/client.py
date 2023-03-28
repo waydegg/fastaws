@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -125,11 +126,16 @@ class S3Client(AwsClient):
         remote_filepath: str,
         access: AmzAcl = "private",
     ):
+        """
+        `remote_filepath` must start with a "/"
+        """
+        f_remote_filepath = urlparse(remote_filepath).path
+
         res = await self._make_request(
             method="PUT",
             action="PutObject",
             host=f"{bucket}.{self.host}",
-            endpoint=remote_filepath,
+            endpoint=f_remote_filepath,
             extra_headers={"x-amz-acl": access},
             data=data,
         )
