@@ -34,7 +34,7 @@ class AwsClient:
 
     async def connect(self):
         assert self._httpx is None, "AwsClient already connected"
-        self._httpx = AsyncClient(timeout=30)
+        self._httpx = AsyncClient(timeout=None)
 
     async def disconnect(self):
         assert self._httpx is not None, "AwsClient is not connected"
