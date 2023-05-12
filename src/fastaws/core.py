@@ -3,7 +3,7 @@ import urllib.parse as urllib
 from datetime import date, datetime
 from typing import Dict
 
-from httpx import AsyncClient, Response
+import httpx
 from structlog import get_logger
 
 from .auth import get_hash, get_signature, get_signature_key
@@ -30,17 +30,6 @@ class AwsClient:
         self.host = host
         self.version = version
 
-        self._httpx = None
-
-    async def connect(self):
-        assert self._httpx is None, "AwsClient already connected"
-        self._httpx = AsyncClient(timeout=None)
-
-    async def disconnect(self):
-        assert self._httpx is not None, "AwsClient is not connected"
-        await self._httpx.aclose()
-        self._httpx = None
-
     async def _make_request(
         self,
         *,
@@ -51,9 +40,7 @@ class AwsClient:
         params: Dict | None = None,
         extra_headers: Dict | None = None,
         data: Dict | None = None,
-    ) -> Response:
-        assert isinstance(self._httpx, AsyncClient)
-
+    ) -> httpx.Response:
         host = host or self.host
 
         utcnow = datetime.utcnow()
@@ -132,11 +119,12 @@ class AwsClient:
         if extra_headers:
             headers.update(extra_headers)
 
-        res = await self._httpx.request(
-            method=method,
-            url=f"https://{host}{endpoint}?{canonical_querystring}",
-            headers=headers,
-            content=payload,
-        )
+        async with httpx.AsyncClient(timeout=None) as client:
+            res = await client.request(
+                method=method,
+                url=f"https://{host}{endpoint}?{canonical_querystring}",
+                headers=headers,
+                content=payload,
+            )
 
         return res
