@@ -26,11 +26,11 @@ classifiers = [
   "Topic :: Internet",
 ]
 dependencies = [
-  "aiofiles==22.1.0",
-  "httpx==0.23.1",
-  "structlog==22.3.0",
-  "beautifulsoup4==4.11.2",
-  "lxml==4.9.2",
+  "aiofiles~=22.1.0",
+  "httpx~=0.23.1",
+  "structlog~=22.3.0",
+  "beautifulsoup4~=4.11.2",
+  "lxml~=4.9.2",
 ]
 
 [project.urls]
