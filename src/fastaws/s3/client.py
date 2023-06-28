@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup, Tag
 
 from fastaws.core import AwsClient
 from fastaws.enums import Service
+from fastaws.exceptions import UnsupportedActionError
 
 from .models import S3ListObjectsRes, S3Object, S3ObjectOwner
 
@@ -138,6 +139,18 @@ class S3Client(AwsClient):
             endpoint=f_remote_filepath,
             extra_headers={"x-amz-acl": access},
             data=data,
+        )
+
+        return res
+
+    async def get_object_attributes(self, bucket: str, *, key: str):
+        if self.provider == "digitaloceanspaces":
+            raise UnsupportedActionError(self.provider, "GetObjectAttributes")
+
+        res = await self._make_request(
+            method="GET",
+            action="GetObjectAttributes",
+            host=f"{bucket}.{self.host}/{key}",
         )
 
         return res
