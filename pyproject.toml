@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastaws"
-version = "0.0.13"
+version = "0.0.14"
 description = "A fast, simple, async Python library for some AWS services (S3, SES, SQS)"
 readme = "README.md"
 requires-python = ">=3.10.4"
@@ -25,13 +25,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Internet",
 ]
-dependencies = [
-  "aiofiles~=22.1.0",
-  "httpx~=0.23.1",
-  "structlog~=22.3.0",
-  "beautifulsoup4~=4.11.2",
-  "lxml~=4.9.2",
-]
+dependencies = ["aiofiles", "httpx", "structlog", "beautifulsoup4", "lxml"]
 
 [project.optional-dependencies]
 dev = ["black", "isort"]
